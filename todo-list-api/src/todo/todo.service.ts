@@ -1,41 +1,29 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Todo } from './todo.entity';
 
 @Injectable()
 export class TodoService {
-  private todos = [];
-  private id = 1;
+  constructor(
+    @InjectRepository(Todo)
+    private todoRepository: Repository<Todo>,
+  ) {}
 
   getTodos() {
-    return this.todos;
+    return this.todoRepository.find();
   }
 
   createTodo(title: string, description?: string) {
-    const newTodo = {
-      id: this.id++,
-      title,
-      description,
-    };
-    this.todos.push(newTodo);
-    return newTodo;
+    const newTodo = this.todoRepository.create({ title, description });
+    return this.todoRepository.save(newTodo);
   }
 
   updateTodo(id: number, title?: string, description?: string) {
-    const todo = this.todos.find((todo) => todo.id === id);
-    if (!todo) {
-      throw new Error(`Todo with id ${id} not found`);
-    }
-    if (title) todo.title = title;
-    if (description) todo.description = description;
-    return todo;
+    return this.todoRepository.update(id, { title, description });
   }
 
   deleteTodo(id: number) {
-    const index = this.todos.findIndex((todo) => todo.id === id);
-    if (index === -1) {
-      throw new Error(`Todo with id ${id} not found`);
-    }
-    const deleted = this.todos.splice(index, 1);
-    return deleted[0];
-  }  
-  
+    return this.todoRepository.delete(id);
+  }
 }
